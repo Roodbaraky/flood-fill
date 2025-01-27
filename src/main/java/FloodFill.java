@@ -10,5 +10,11 @@ public class FloodFill {
         frame.setLocationRelativeTo(null);
         frame.setResizable(true);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        var floodPanel = new FloodPanel();
+        frame.add(floodPanel);
+        frame.pack();
+        floodPanel.requestFocus();
+
     }
 }
