@@ -2,8 +2,6 @@ import javax.swing.*;
 
 public class FloodFill {
     public static void main(String[] args) {
-        System.out.println("Working");
-
         JFrame frame = new JFrame("Flood Fill");
         frame.setVisible(true);
         frame.setSize(600, 600);
