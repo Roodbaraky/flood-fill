@@ -15,7 +15,7 @@ import javax.swing.*;
 public class FloodPanel extends JPanel implements ActionListener, MouseMotionListener, MouseListener {
     int divisions = 40;
     boolean[][] painted = new boolean[divisions][divisions];
-    boolean[][] filled = new boolean[divisions][divisions];
+    boolean[][] toFill = new boolean[divisions][divisions];
 
     int xStep = 600 / 40;
     int yStep = 600 / 40;
@@ -133,11 +133,11 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
         int x = (int) node.getX();
         int y = (int) node.getY();
 
-        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || toFill[y][x]) {
             return;
         }
 
-        filled[y][x] = true;
+        toFill[y][x] = true;
         floodFillStep(new Point(x, y + 1), pointCollection);
         floodFillStep(new Point(x, y - 1), pointCollection);
         floodFillStep(new Point(x - 1, y), pointCollection);
@@ -148,11 +148,11 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
     public void floodFillStack(Point current) {
         var y = current.y;
         var x = current.x;
-        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || toFill[y][x]) {
             return;
         }
 
-        filled[y][x] = true;
+        toFill[y][x] = true;
         painted[y][x] = true;
 
         rectsStack.push(new Point(x + 1, y));
@@ -165,10 +165,10 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
     public void floodFillQueue(Point current) {
         var y = current.y;
         var x = current.x;
-        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || toFill[y][x]) {
             return;
         }
-        filled[y][x] = true;
+        toFill[y][x] = true;
         painted[y][x] = true;
         rectsQueue.add(new Point(x, y - 1));
         rectsQueue.add(new Point(x, y + 1));
