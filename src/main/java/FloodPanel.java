@@ -5,20 +5,23 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.util.LinkedList;
+import java.util.ArrayDeque;
+import java.util.Collection;
 import java.util.Queue;
+import java.util.Stack;
 
 import javax.swing.*;
 
 public class FloodPanel extends JPanel implements ActionListener, MouseMotionListener, MouseListener {
     int divisions = 40;
     boolean[][] painted = new boolean[divisions][divisions];
+    boolean[][] filled = new boolean[divisions][divisions];
+
     int xStep = 600 / 40;
     int yStep = 600 / 40;
     Point pos;
-    Queue<Point> rects = new LinkedList<>() {
-    };
-
+    Queue<Point> rectsQueue = new ArrayDeque<>(600);
+    Stack<Point> rectsStack = new Stack<>();
     Timer timer;
 
     FloodPanel() {
@@ -27,7 +30,6 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
         setFocusable(true);
         addMouseMotionListener(this);
         addMouseListener(this);
-        //need add mouse listener for click
         timer = new Timer(32, this);
         timer.start();
 
@@ -36,7 +38,7 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         var d = getSize();
-        //        g.drawLine(0,0,200,200);
+        //Draw Grid
         for (int x = 0; x <= divisions; x++) {
             g.drawLine(xStep * x, 0, x * xStep, d.height);
         }
@@ -44,6 +46,8 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
         for (int y = 0; y <= divisions; y++) {
             g.drawLine(0, y * yStep, d.width, y * yStep);
         }
+
+        //Draw Painted Cells
         for (int y = 0; y < divisions; y++) {
             for (int x = 0; x < divisions; x++) {
                 if (painted[y][x]) {
@@ -51,12 +55,18 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
                 }
             }
         }
-        if (rects != null && !rects.isEmpty()) {
-            for (var rect : rects) {
-                g.setColor(Color.red);
-                drawCell(g, (int) rect.getX(), (int) rect.getY());
-            }
+        //FloodFill from Queue
+        if (!rectsQueue.isEmpty()) {
+            Point current = rectsQueue.poll();
+            floodFillQueue(current);
         }
+        //FloodFill from Stack
+        if (!rectsStack.isEmpty()) {
+            Point current = rectsStack.pop();
+            floodFillStack(current);
+
+        }
+
     }
 
     private void drawCell(final Graphics g, final int x, final int y) {
@@ -92,14 +102,15 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     @Override
     public void mousePressed(final MouseEvent e) {
+        //use Queue
         if (e.getButton() == MouseEvent.BUTTON3) {
-            pos = e.getPoint();
-            var x = pos.x / xStep;
-            var y = pos.y / yStep;
-            //            rects.add(new Point(x, y));
-            //            //if right-mouse, execute flood fill at clicked coords
-            //            System.out.println("FloodFill()");
-            floodFill(new Point(x, y));
+            rectsQueue.clear();
+            rectsQueue.add(new Point(e.getX() / xStep, e.getY() / yStep));
+        }
+        //use Stack
+        if (e.getButton() == MouseEvent.BUTTON2) {
+            rectsStack.clear();
+            rectsStack.push(new Point(e.getX() / xStep, e.getY() / yStep));
         }
     }
 
@@ -118,18 +129,50 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     }
 
-    public void floodFill(Point node) {
+    public void floodFillStep(Point node, Collection<Point> pointCollection) {
         int x = (int) node.getX();
         int y = (int) node.getY();
 
-        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x]) {
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
             return;
         }
+
+        filled[y][x] = true;
+        floodFillStep(new Point(x, y + 1), pointCollection);
+        floodFillStep(new Point(x, y - 1), pointCollection);
+        floodFillStep(new Point(x - 1, y), pointCollection);
+        floodFillStep(new Point(x + 1, y), pointCollection);
+
+    }
+
+    public void floodFillStack(Point current) {
+        var y = current.y;
+        var x = current.x;
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
+            return;
+        }
+
+        filled[y][x] = true;
         painted[y][x] = true;
-        rects.add(node);
-        floodFill(new Point(x, y + 1));
-        floodFill(new Point(x, y - 1));
-        floodFill(new Point(x - 1, y));
-        floodFill(new Point(x + 1, y));
+
+        rectsStack.push(new Point(x + 1, y));
+        rectsStack.push(new Point(x - 1, y));
+        rectsStack.push(new Point(x, y + 1));
+        rectsStack.push(new Point(x, y - 1));
+
+    }
+
+    public void floodFillQueue(Point current) {
+        var y = current.y;
+        var x = current.x;
+        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || filled[y][x]) {
+            return;
+        }
+        filled[y][x] = true;
+        painted[y][x] = true;
+        rectsQueue.add(new Point(x, y - 1));
+        rectsQueue.add(new Point(x, y + 1));
+        rectsQueue.add(new Point(x - 1, y));
+        rectsQueue.add(new Point(x + 1, y));
     }
 }
