@@ -14,11 +14,13 @@ import javax.swing.*;
 
 public class FloodPanel extends JPanel implements ActionListener, MouseMotionListener, MouseListener {
     int divisions = 40;
+    int width = 600;
+    int height = 600;
     boolean[][] painted = new boolean[divisions][divisions];
     boolean[][] toFill = new boolean[divisions][divisions];
 
-    int xStep = 600 / 40;
-    int yStep = 600 / 40;
+    int xStep = width / divisions;
+    int yStep = height / divisions;
     Point pos;
     Queue<Point> rectsQueue = new ArrayDeque<>(600);
     Stack<Point> rectsStack = new Stack<>();
@@ -38,11 +40,12 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         var d = getSize();
+        resetDimensionsAndSteps();
+
         //Draw Grid
         for (int x = 0; x <= divisions; x++) {
             g.drawLine(xStep * x, 0, x * xStep, d.height);
         }
-
         for (int y = 0; y <= divisions; y++) {
             g.drawLine(0, y * yStep, d.width, y * yStep);
         }
@@ -69,6 +72,14 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     }
 
+    private void resetDimensionsAndSteps() {
+        var d = getSize();
+        height = d.height;
+        width = d.width;
+        xStep = width / divisions;
+        yStep = height / divisions;
+    }
+
     private void drawCell(final Graphics g, final int x, final int y) {
         g.fillRect(x * xStep, y * yStep, xStep, yStep);
     }
@@ -80,12 +91,22 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     @Override
     public void mouseDragged(final MouseEvent e) {
+        resetDimensionsAndSteps();
+        Point pos = e.getPoint();
+        Dimension size = getSize();
+        if (pos.x <= 0 || pos.x > size.width - (width / divisions) || pos.y <= 0 || pos.y > size.height - (width / divisions)) {
+            return;
+        }
         if (e.getModifiersEx() == InputEvent.BUTTON1_DOWN_MASK) {
             pos = e.getPoint();
-            //add valid within dimensions
+            resetDimensionsAndSteps();
             var x = pos.x / xStep;
             var y = pos.y / yStep;
-            painted[y][x] = true;
+            if (y < painted.length && x < painted[y].length) {
+
+                painted[y][x] = true;
+            }
+
         }
 
     }
@@ -102,6 +123,11 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     @Override
     public void mousePressed(final MouseEvent e) {
+        Point pos = e.getPoint();
+        Dimension size = getSize();
+        if (pos.x <= 0 || pos.x > size.width - (width / divisions) || pos.y <= 0 || pos.y > size.height - (width / divisions)) {
+            return;
+        }
         //use Queue
         if (e.getButton() == MouseEvent.BUTTON3) {
             rectsQueue.clear();
@@ -151,10 +177,8 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
         if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || toFill[y][x]) {
             return;
         }
-
         toFill[y][x] = true;
         painted[y][x] = true;
-
         rectsStack.push(new Point(x + 1, y));
         rectsStack.push(new Point(x - 1, y));
         rectsStack.push(new Point(x, y + 1));
