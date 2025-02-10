@@ -155,22 +155,6 @@ public class FloodPanel extends JPanel implements ActionListener, MouseMotionLis
 
     }
 
-    public void floodFillStep(Point node, Collection<Point> pointCollection) {
-        int x = (int) node.getX();
-        int y = (int) node.getY();
-
-        if (x < 0 || y < 0 || x >= divisions || y >= divisions || painted[y][x] || toFill[y][x]) {
-            return;
-        }
-
-        toFill[y][x] = true;
-        floodFillStep(new Point(x, y + 1), pointCollection);
-        floodFillStep(new Point(x, y - 1), pointCollection);
-        floodFillStep(new Point(x - 1, y), pointCollection);
-        floodFillStep(new Point(x + 1, y), pointCollection);
-
-    }
-
     public void floodFillStack(Point current) {
         var y = current.y;
         var x = current.x;
